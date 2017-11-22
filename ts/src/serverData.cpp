@@ -196,7 +196,7 @@ void serverData::debugPrint(std::stringstream& diag, bool withPos) const {
             auto [x2, y2, z2] = cData->getClientPositionRaw().get();
             diag << TS_INDENT << TS_INDENT << TS_INDENT << TS_INDENT << "POSINTERP: " << x << "," << y << "," << z << "\n";
             diag << TS_INDENT << TS_INDENT << TS_INDENT << TS_INDENT << "POSRAW: " << x2 << "," << y2 << "," << z2 << "\n";
-            diag << TS_INDENT << TS_INDENT << TS_INDENT << TS_INDENT << "VIEW: " << static_cast<float>(static_cast<AngleDegrees>(cData->getViewDirection())) << "\n";
+            diag << TS_INDENT << TS_INDENT << TS_INDENT << TS_INDENT << "VIEW: " << static_cast<float>(cData->getViewDirection().toAngle()) << "\n";
             diag << TS_INDENT << TS_INDENT << TS_INDENT << TS_INDENT << "LPOSTIME: " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - cData->getLastPositionUpdateTime()).count() << "us\n";
             diag << TS_INDENT << TS_INDENT << TS_INDENT << TS_INDENT << "CurTransFreq: " << cData->getCurrentTransmittingFrequency() << "\n";
             diag << TS_INDENT << TS_INDENT << TS_INDENT << TS_INDENT << "spectator: " << cData->isSpectating << "\n";
