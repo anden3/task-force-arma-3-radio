@@ -24,6 +24,8 @@ http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3442.html
 
 #include <string>
 
+#include <boost/exception/all.hpp>
+
 namespace boost {
 
     template<typename charT, typename traits = std::char_traits<charT> > class basic_string_ref;
