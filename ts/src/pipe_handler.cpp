@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include "pipe_handler.hpp"
 #include "profilers.hpp"
 #include <thread>
@@ -102,3 +104,5 @@ void pipe_handler::openPipe() {
         NULL,     // don't set maximum bytes 
         NULL);    // don't set maximum time
 }
+
+#endif

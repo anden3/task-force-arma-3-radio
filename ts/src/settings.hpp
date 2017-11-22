@@ -7,6 +7,10 @@
 #include "SignalSlot.hpp"
 #include <sstream>
 
+#ifndef _WIN32
+#define _strnicmp strncasecmp
+#endif
+
 //Was originally using enum.hpp. But it had to be edited to allow more than 8 settings.. at that was too tedious
 #define Settings(XX) \
    XX(full_duplex,true), \
@@ -62,7 +66,7 @@ public:
         t_float,
         t_string
     };
-    explicit settingValue() : type(settingType::t_invalid), boolValue(false) {}
+    settingValue() : type(settingType::t_invalid), boolValue(false) {}
     constexpr settingValue(bool value) : type(settingType::t_bool), boolValue(value) {}
     settingValue(const float& value) : type(settingType::t_float), floatValue(value) {}
     settingValue(const std::string& value) : type(settingType::t_string), stringValue(new std::string(value)) {}
@@ -140,7 +144,7 @@ public:
         configValueSet(key);
     }
 
-    template<>
+    // template<>
     void set(Setting key, const std::string& value) {
         LockGuard_exclusive<CriticalSectionLock> lock(&m_lock);
         values[key].setString(value);

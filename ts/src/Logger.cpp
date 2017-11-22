@@ -80,6 +80,18 @@ Logger::Logger() {}
 
 Logger::~Logger() {}
 
-void DebugStringLogger::log(const std::string & message) { OutputDebugStringA(message.c_str()); printf("%s", message.c_str()); }
+void DebugStringLogger::log(const std::string & message) {
+#ifdef _WIN32
+    OutputDebugStringA(message.c_str());
+#endif
+    
+    printf("%s", message.c_str());
+}
 
-void DebugStringLogger::log(const std::string & message, LogLevel _loglevel) { OutputDebugStringA(message.c_str()); printf("%s", message.c_str()); }
+void DebugStringLogger::log(const std::string & message, LogLevel _loglevel) {
+#ifdef _WIN32
+    OutputDebugStringA(message.c_str());
+#endif
+
+    printf("%s", message.c_str());
+}

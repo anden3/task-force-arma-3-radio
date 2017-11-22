@@ -36,17 +36,20 @@
 #include "helpers.hpp"
 #include "PlaybackHandler.hpp"
 #include "Logger.hpp"
-#include "SharedMemoryHandler.hpp"
 #include "Teamspeak.hpp"
 #include <chrono>
 #include "version.h"
+
+#ifndef _WIN32
+#define MAX_PATH 260
+#endif
 
 #define PATH_BUFSIZE 512
 
 std::thread threadPipeHandle;
 std::thread threadService;
 
-volatile bool exitThread = FALSE;
+volatile bool exitThread = false;
 volatile bool pipeConnected = false;
 
 void log_string(std::string message, LogLevel level) {
@@ -138,7 +141,8 @@ void ServiceThread() {
 
     while (!exitThread) {
         if (!Teamspeak::isConnected()) {  //If not connected we don't have any clientData anyway
-            Sleep(500);
+            std::this_thread::sleep_for(500ms);
+            // Sleep(500);
             continue;
         }
         if ((std::chrono::system_clock::now() - lastCheckForExpire.load()) > MILLIS_TO_EXPIRE) {
@@ -153,10 +157,17 @@ void ServiceThread() {
             updateUserStatusInfo(true);
             lastInfoUpdate = std::chrono::system_clock::now();
         }
-        Sleep(100);
+
+        std::this_thread::sleep_for(100ms);
+        // Sleep(100);
     }
 }
+
+#ifdef _WIN32
+#include "SharedMemoryHandler.hpp"
 #define USE_SHAREDMEM
+#endif
+
 void PipeThread() {
 #ifdef USE_SHAREDMEM
     SharedMemoryHandler pipeHandler;
@@ -212,8 +223,9 @@ void PipeThread() {
         #endif	
         } else {
             gameCommandIn.reset();
-        #ifdef USE_SHAREDMEM
             std::string commandResult = TFAR::getInstance().getCommandProcessor()->processCommand(command);
+
+        #ifdef USE_SHAREDMEM
             pipeHandler.sendData(commandResult);
             if (gameCommandIn.getCurrentElapsedTime().count() >
             #ifdef _DEBUG
@@ -273,12 +285,18 @@ bool pluginInitialized = false;
 int ts3plugin_init() {
     pluginInitialized = true;
     char pluginPath[PATH_BUFSIZE];
+
+#ifdef _WIN32
     if (ts3plugin_apiVersion() <= 20) {
         ts3Functions.getPluginPath(pluginPath, PATH_BUFSIZE);
     } else {	//Compatibility hack for API version > 21
         typedef  void(*getPluginPath_20)(char* path, size_t maxLen, const char* pluginID);
         static_cast<getPluginPath_20>(static_cast<void*>(ts3Functions.getPluginPath))(pluginPath, PATH_BUFSIZE, TFAR::getInstance().getPluginID().c_str()); //This is ugly but keeps compatibility
     }
+#else
+    ts3Functions.getPluginPath(pluginPath, PATH_BUFSIZE);
+#endif
+
     TFAR::getInstance().setPluginPath(pluginPath);
 
 #if ENABLE_API_PROFILER
@@ -300,7 +318,10 @@ int ts3plugin_init() {
     exitThread = false;
     threadPipeHandle = std::thread(&PipeThread);
     threadService = std::thread(&ServiceThread);
+
+#ifdef _WIN32
     TFAR::createCheckForUpdateThread();
+#endif
 
     TFAR::getInstance().onGameDisconnected.connect([]() {
         TFAR::getInstance().m_gameData.alive = false;
@@ -309,7 +330,12 @@ int ts3plugin_init() {
 
     char path[MAX_PATH];
     ts3Functions.getConfigPath(path, MAX_PATH);
+
+#ifdef _WIN32
     strcat_s(path, MAX_PATH, "settings.db");
+#else
+    strcat(path, "settings.db");
+#endif
 
     sqlite3 *db = 0;
     char *err = 0;
@@ -493,11 +519,12 @@ void processVoiceData(TSServerID serverConnectionHandlerID, TSClientID clientID,
         auto myViewDirection = myData->getViewDirection();
         //Time differential based on direction
         clientData->effects.getClunk("voice_clunk")->process(samples, channels, sampleCount, relativePosition, myViewDirection);//interaural time difference
-                                                                                                                                //Volume differential based on direction
+
+#ifdef _WIN32                                                                                                                   //Volume differential based on direction
         helpers::applyILD(samples, sampleCount, channels, myPosition, myViewDirection, clientData->getClientPosition(), clientData->getViewDirection());
-
-        //helpers::applyILD(samples, sampleCount, channels, relativePosition, myViewDirection);//interaural level difference
-
+#else
+        helpers::applyILD(samples, sampleCount, channels, relativePosition, myViewDirection);//interaural level difference
+#endif
 
         if (shouldPlayerHear) {
             if (vehicleVolumeLoss < 0.01 || isInSameVehicle) {

@@ -1,6 +1,6 @@
 #pragma once
-#include "DspFilters\Butterworth.h"
-#include "DspFilters\RBJ.h"
+#include "Dspfilters/Butterworth.h"
+#include "DspFilters/RBJ.h"
 #include <math.h>
 #include "helpers.hpp"
 #include <simpleSource/SimpleComp.h>
@@ -31,7 +31,7 @@ public:
 
     template<class T>
     static void processFilter(T& filter, float* buffer, int samplesNumber) {
-        filter.process<float>(samplesNumber, &buffer); //need a float** here so we use &buffer
+        filter.template process<float>(samplesNumber, &buffer); //need a float** here so we use &buffer
     }
 
     virtual void setErrorLeveL(float errorLevel) = 0;

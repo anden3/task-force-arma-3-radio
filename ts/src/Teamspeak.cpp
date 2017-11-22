@@ -132,7 +132,7 @@ Teamspeak& Teamspeak::getInstance() {
 
 void Teamspeak::unmuteAll(TSServerID serverConnectionHandlerID) {
     anyID* ids;
-    DWORD error;
+    unsigned int error;
 #ifdef unmuteAllClients
     if ((error = ts3Functions.getClientList(serverConnectionHandlerID, &ids)) != ERROR_ok) {
         log("Error getting all clients from server", error);
@@ -161,7 +161,7 @@ void Teamspeak::setClientMute(TSServerID serverConnectionHandlerID, TSClientID c
     clientIds[1] = 0;
     getInstance().serverData[serverConnectionHandlerID].setClientMuteStatus(clientID, mute);
 
-    DWORD error;
+    unsigned int error;
     if (mute) {
         if ((error = ts3Functions.requestMuteClients(serverConnectionHandlerID.baseType(), clientIds, NULL)) != ERROR_ok) {
             log("Can't mute client", error);
@@ -181,7 +181,7 @@ void Teamspeak::setClientMute(TSServerID serverConnectionHandlerID, std::vector<
     }
     clientIds.push_back(0);
 
-    DWORD error;
+    unsigned int error;
     if (mute) {
         if ((error = ts3Functions.requestMuteClients(serverConnectionHandlerID.baseType(), reinterpret_cast<anyID*>(clientIds.data()), nullptr)) != ERROR_ok) {
             log("Can't mute client", error);
@@ -202,7 +202,7 @@ void Teamspeak::moveToSeriousChannel(TSServerID serverConnectionHandlerID) {
         return;
     getInstance().serverData[serverConnectionHandlerID].setMyOriginalChannel(currentChannel);
     std::string seriousChannelPassword = TFAR::config.get<std::string>(Setting::serious_channelPassword);
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.requestClientMove(serverConnectionHandlerID.baseType(), getMyId(serverConnectionHandlerID).baseType(), seriousChannelID.baseType(), seriousChannelPassword.c_str(), nullptr)) != ERROR_ok) {
         log("Can't join channel", error);
     }
@@ -215,7 +215,7 @@ void Teamspeak::moveFromSeriousChannel(TSServerID serverConnectionHandlerID) {
 
 
     if (getChannelOfClient(serverConnectionHandlerID, getMyId(serverConnectionHandlerID)) == notSeriousChannelId) return;
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.requestClientMove(serverConnectionHandlerID.baseType(), getInstance().serverData[serverConnectionHandlerID].getMyClientID().baseType(), notSeriousChannelId.baseType(), "", NULL)) != ERROR_ok) {
         log("Can't join back channel", error);
     }
@@ -227,7 +227,7 @@ bool Teamspeak::setMyNicknameToGameName(TSServerID serverConnectionHandlerID, co
     if (getMyNickname(serverConnectionHandlerID) != getInstance().serverData[serverConnectionHandlerID].getMyOriginalNickname())
         getInstance().serverData[serverConnectionHandlerID].setMyOriginalNickname(getMyNickname(serverConnectionHandlerID));
 
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.setClientSelfVariableAsString(serverConnectionHandlerID.baseType(), CLIENT_NICKNAME, nickname.c_str())) != ERROR_ok) {
         log("Error setting client nickname", error);
         return false;
@@ -240,7 +240,7 @@ void Teamspeak::resetMyNickname(TSServerID serverConnectionHandlerID) {
     std::string origNickname = getInstance().serverData[serverConnectionHandlerID].getMyOriginalNickname();
     if (origNickname.empty())
         return;
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.setClientSelfVariableAsString(serverConnectionHandlerID.baseType(), CLIENT_NICKNAME, origNickname.c_str())) != ERROR_ok) {
         log("Error resetting client nickname", error);
     } else {
@@ -364,7 +364,7 @@ void Teamspeak::_onInit() {
 
 void Teamspeak::_updateChanneNameCache(TSServerID serverConnectionHandlerID) {
     auto& serverData = getInstance().serverData[serverConnectionHandlerID];
-    DWORD error;
+    unsigned int error;
     uint64_t* result;
     if ((error = ts3Functions.getChannelList(serverConnectionHandlerID.baseType(), &result)) != ERROR_ok) {
         log("Can't get channel list", error);
@@ -396,14 +396,14 @@ void Teamspeak::sendPluginCommand(TSServerID serverConnectionHandlerID, const st
 }
 
 void Teamspeak::playWavFile(const std::string& filePath) {
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.playWaveFile(getCurrentServerConnection().baseType(), filePath.c_str())) != ERROR_ok) {
         log("can't play sound", error, LogLevel_ERROR);
     }
 }
 
 void Teamspeak::setVoiceDisabled(TSServerID serverConnectionHandlerID, bool disabled) {
-    DWORD error;
+    unsigned int error;
     //When CLIENT_INPUT_DEACTIVATED == INPUT_ACTIVE We are sending audio...
     if ((error = ts3Functions.setClientSelfVariableAsInt(serverConnectionHandlerID.baseType(), CLIENT_INPUT_DEACTIVATED, disabled ? INPUT_DEACTIVATED : INPUT_ACTIVE)) != ERROR_ok) {
         log("Can't active talking by tangent", error);
@@ -416,7 +416,7 @@ void Teamspeak::setVoiceDisabled(TSServerID serverConnectionHandlerID, bool disa
 
 bool Teamspeak::hlp_checkVad() {
     char* vad; // Is "true" or "false"
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.getPreProcessorConfigValue(getCurrentServerConnection().baseType(), "vad", &vad)) == ERROR_ok) {
         bool result = strcmp(vad, "true") == 0;
         ts3Functions.freeMemory(vad);
@@ -428,14 +428,14 @@ bool Teamspeak::hlp_checkVad() {
 }
 
 void Teamspeak::hlp_enableVad() {
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.setPreProcessorConfigValue(getCurrentServerConnection().baseType(), "vad", "true")) != ERROR_ok) {
         log("Failed to set VAD value", error);
     }
 }
 
 void Teamspeak::hlp_disableVad() {
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.setPreProcessorConfigValue(getCurrentServerConnection().baseType(), "vad", "false")) != ERROR_ok) {
         log("Failure disabling VAD", error);
     }
@@ -467,7 +467,7 @@ TSClientID Teamspeak::getMyId(TSServerID serverConnectionHandlerID) {
     if (myID) return myID;
 
     if (!isConnected(serverConnectionHandlerID)) return myID;
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.getClientID(serverConnectionHandlerID.baseType(), reinterpret_cast<anyID*>(&myID))) != ERROR_ok) {
         log("Failure getting client ID", error);
     }
@@ -481,7 +481,7 @@ bool Teamspeak::isInChannel(TSServerID serverConnectionHandlerID, TSClientID cli
 
 std::string Teamspeak::getChannelName(TSServerID serverConnectionHandlerID, TSClientID clientId) {
     if (!clientId) return "";
-    DWORD error;
+    unsigned int error;
     auto channelID = getChannelOfClient(serverConnectionHandlerID, clientId);
     if (!channelID) return "";
     char* channelName;
@@ -496,7 +496,7 @@ std::string Teamspeak::getChannelName(TSServerID serverConnectionHandlerID, TSCl
 
 dataType::TSChannelID Teamspeak::getChannelOfClient(TSServerID serverConnectionHandlerID, TSClientID clientId) {
     uint64 channelId;
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.getChannelOfClient(serverConnectionHandlerID.baseType(), clientId.baseType(), &channelId)) != ERROR_ok) {
         log("Can't get current channel", error);
     }
@@ -505,7 +505,7 @@ dataType::TSChannelID Teamspeak::getChannelOfClient(TSServerID serverConnectionH
 
 std::string Teamspeak::getServerName(TSServerID serverConnectionHandlerID) {
     char* name;
-    DWORD error = ts3Functions.getServerVariableAsString(serverConnectionHandlerID.baseType(), VIRTUALSERVER_NAME, &name);
+    unsigned int error = ts3Functions.getServerVariableAsString(serverConnectionHandlerID.baseType(), VIRTUALSERVER_NAME, &name);
     if (error != ERROR_ok) {
         log("Can't get server name", error, LogLevel_ERROR);
         return "ERROR_GETTING_SERVER_NAME";
@@ -518,7 +518,7 @@ std::string Teamspeak::getServerName(TSServerID serverConnectionHandlerID) {
 
 bool Teamspeak::isTalking(TSServerID currentServerConnectionHandlerID, TSClientID playerId) {
     int result = 0;
-    DWORD error;
+    unsigned int error;
     if (playerId == getMyId(currentServerConnectionHandlerID)) {
         if ((error = ts3Functions.getClientSelfVariableAsInt(currentServerConnectionHandlerID.baseType(), CLIENT_FLAG_TALKING, &result)) != ERROR_ok) {
             log("Can't get talking status", error);
@@ -547,7 +547,7 @@ std::vector<TSClientID> Teamspeak::getChannelClients(TSServerID serverConnection
 
 std::string Teamspeak::getMyNickname(TSServerID serverConnectionHandlerID) {
     char* bufferForNickname;
-    DWORD error;
+    unsigned int error;
     TSClientID myId = getMyId(serverConnectionHandlerID);
     if (!myId) return "";
     if ((error = ts3Functions.getClientVariableAsString(serverConnectionHandlerID.baseType(), myId.baseType(), CLIENT_NICKNAME, &bufferForNickname)) != ERROR_ok) {
@@ -568,7 +568,7 @@ TSChannelID Teamspeak::findChannelByName(TSServerID serverConnectionHandlerID, c
 std::string Teamspeak::getMetaData(TSServerID serverConnectionHandlerID, TSClientID clientId) {
     std::string result;
     char* clientInfo;
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.getClientVariableAsString(serverConnectionHandlerID.baseType(), clientId.baseType(), CLIENT_META_DATA, &clientInfo)) != ERROR_ok) {
         log("Can't get client metadata", error);
         return "";
@@ -586,7 +586,7 @@ std::string Teamspeak::getMetaData(TSServerID serverConnectionHandlerID, TSClien
 
 void Teamspeak::setMyMetaData(const std::string & metaData) {
     char* clientInfo;
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.getClientVariableAsString(getCurrentServerConnection().baseType(), getMyId(ts3Functions.getCurrentServerConnectionHandlerID()).baseType(), CLIENT_META_DATA, &clientInfo)) != ERROR_ok) {
         log("setMetaData - Can't get client metadata", error);
     } else {
@@ -611,7 +611,7 @@ void Teamspeak::setMyMetaData(const std::string & metaData) {
 }
 
 std::string Teamspeak::getClientNickname(TSServerID serverConnectionHandlerID, TSClientID clientId) {
-    DWORD error;
+    unsigned int error;
     char* name;
     if ((error = ts3Functions.getClientVariableAsString(serverConnectionHandlerID.baseType(), clientId.baseType(), CLIENT_NICKNAME, &name)) != ERROR_ok) {
         log("Error getting client nickname", error);
@@ -625,14 +625,14 @@ std::string Teamspeak::getClientNickname(TSServerID serverConnectionHandlerID, T
 
 void Teamspeak::setMyClient3DPosition(TSServerID serverConnectionHandlerID, Position3D pos) {
 
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.systemset3DListenerAttributes(serverConnectionHandlerID.baseType(), pos, NULL, NULL)) != ERROR_ok) {
         log("can't center listener", error);
     }
 }
 
 void Teamspeak::setClient3DPosition(TSServerID serverConnectionHandlerID, TSClientID clientId, Position3D pos) {
-    DWORD error;
+    unsigned int error;
     if ((error = ts3Functions.channelset3DAttributes(serverConnectionHandlerID.baseType(), clientId.baseType(), Position3D())) != ERROR_ok) {
         //We don't really care.. so don't spam our users
         //if (error != ERROR_client_invalid_id) //can happen if client disconnected while playing
@@ -649,8 +649,9 @@ void Teamspeak::setClient3DPosition(TSServerID serverConnectionHandlerID, TSClie
 */
 
 #pragma comment (lib, "version.lib")
-int ts3plugin_apiVersion() {
 
+#ifdef _WIN32
+int ts3plugin_apiVersion() {
     WCHAR fileName[_MAX_PATH];
     DWORD size = GetModuleFileName(nullptr, fileName, _MAX_PATH);
     fileName[size] = NULL;
@@ -661,7 +662,7 @@ int ts3plugin_apiVersion() {
         delete[] versionInfo;
         return PLUGIN_API_VERSION;
     }
-    UINT    			len = 0;
+    UINT                len = 0;
     VS_FIXEDFILEINFO*   vsfi = nullptr;
     VerQueryValue(versionInfo, L"\\", reinterpret_cast<void**>(&vsfi), &len);
     short version = HIWORD(vsfi->dwFileVersionLS);
@@ -684,6 +685,11 @@ int ts3plugin_apiVersion() {
         default: return PLUGIN_API_VERSION;
     }
 }
+#else
+int ts3plugin_apiVersion() {
+    return PLUGIN_API_VERSION;
+}
+#endif
 
 /* Set TeamSpeak 3 callback functions */
 void ts3plugin_setFunctionPointers(const struct TS3Functions funcs) {
@@ -785,7 +791,12 @@ const char* ts3plugin_infoTitle() {
     size_t maxLen = info.length() + 1;
     char* result = static_cast<char*>(malloc(maxLen * sizeof(char)));
     memset(result, 0, maxLen);
+
+#ifdef _WIN32
     strncpy_s(result, maxLen, info.c_str(), info.length());
+#else
+    strlcpy(result, info.c_str(), maxLen);
+#endif
     return result;
 }
 

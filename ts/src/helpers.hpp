@@ -22,7 +22,7 @@ static_assert(const_strlen("hello") == 5, "const_strlen no workerino");
 
 //from MSVC std library just in constexpr
 constexpr size_t _Hash_bytes(const char *_First, size_t _Count) _NOEXCEPT {	// FNV-1a hash function for bytes in [_First, _First + _Count)
-#if defined(_WIN64)
+#if defined(_WIN64) || defined(__x86_64__)
     static_assert(sizeof(size_t) == 8, "This code is for 64-bit size_t.");
     const size_t _FNV_offset_basis = 14695981039346656037ULL;
     const size_t _FNV_prime = 1099511628211ULL;
@@ -164,7 +164,7 @@ public:
             }
         };
 
-        filter->process<float>(static_cast<int>(sampleCount), floatsSample);
+        filter->template process<float>(static_cast<int>(sampleCount), floatsSample);
 
         // put mixed output to stream
         for (size_t i = 0; i < sampleCount * channels; i += channels) {

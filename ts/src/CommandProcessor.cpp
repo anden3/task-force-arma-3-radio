@@ -11,6 +11,12 @@
 #include "antennaManager.h"
 #include "version.h"
 
+// Get Mac implementation of MessageBoxA.
+#ifdef __APPLE__
+#include "MacFunctions.hpp"
+#endif
+
+
 volatile bool vadEnabled = false;
 volatile bool skipTangentOff = false;
 volatile bool waitingForTangentOff = false;
@@ -237,9 +243,13 @@ void CommandProcessor::processAsynchronousCommand(const std::string& command) {
         case gameCommand::KILLED:
             processUnitKilled(convertNickname(tokens[1]), currentServerConnectionHandlerID);
             return;
+
+#ifdef _WIN32
         case gameCommand::TRACK:
             TFAR::trackPiwik(tokens);
             return;
+#endif
+
         case gameCommand::DFRAME:
             TFAR::getInstance().m_gameData.currentDataFrame++;
             return;;

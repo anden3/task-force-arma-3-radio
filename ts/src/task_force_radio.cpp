@@ -1,6 +1,4 @@
 #include "task_force_radio.hpp"
-#include <Windows.h>
-#include <wininet.h>
 #include "common.hpp"
 #include <thread>
 #include <locale>
@@ -162,6 +160,11 @@ void TFAR::checkIfSeriousModeEnabled(TSServerID serverID) {
     }
 }
 
+#ifdef _WIN32
+
+#include <Windows.h>
+#include <wininet.h>
+
 bool TFAR::isUpdateAvailable() {
     DWORD dwBytes;
     char ch;
@@ -193,7 +196,9 @@ bool TFAR::isUpdateAvailable() {
         return false;
     }
 }
+
 #include <sstream>
+
 void TFAR::trackPiwik(const std::vector<std::string>& piwikData) {
 
     /*
@@ -336,6 +341,8 @@ void TFAR::createCheckForUpdateThread() {
         }
     }).detach();
 }
+
+#endif
 
 std::shared_ptr<CommandProcessor>& TFAR::getCommandProcessor() {
     if (!getInstance().m_commandProcessor)

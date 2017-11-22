@@ -9,7 +9,17 @@
 #include "task_force_radio.hpp"
 #include <bitset>
 #include <public_errors.h>
+
+#ifdef _WIN32
+
 #define CAN_USE_SSE_ON(x) (IsProcessorFeaturePresent(PF_XMMI64_INSTRUCTIONS_AVAILABLE) && (reinterpret_cast<uintptr_t>(x) % 16 == 0))
+
+#elif __APPLE__
+
+#include "MacFunctions.hpp"
+#define CAN_USE_SSE_ON(x) (canUseSSE2() && (reinterpret_cast<uintptr_t>(x) % 16 == 0))
+
+#endif
 
 void helpers::applyGain(short * samples, size_t sampleCount, int channels, float directTalkingVolume) {
     if (directTalkingVolume == 0.0f) {
@@ -56,6 +66,10 @@ void helpers::applyILD(short * samples, size_t sampleCount, int channels, Direct
         }
     }
 }
+
+// Mac doesn't have the X3DAudio library.
+#ifdef _WIN32
+
 #define _SPEAKER_POSITIONS_
 #include <X3daudio.h>
 #pragma comment(lib, "x3daudio.lib")
@@ -164,6 +178,8 @@ drawLine3D [ASLToAGL eyePos player2, ASLToAGL (eyePos player2) vectorAdd (upVec 
         samples[i + 1] = static_cast<short>(samples[i + 1] * gainFrontRight);
     }
 }
+
+#endif
 
 void helpers::shortFloatMultEx(short * data, size_t elementCount, __m128 multPack) {//#TODO use in gain and ILD for ILD multPack is {left,right,left,right}
 
