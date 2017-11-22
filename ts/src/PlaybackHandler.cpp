@@ -11,6 +11,11 @@
 #include "Teamspeak.hpp"
 #include "Logger.hpp"
 
+// Get Mac implementation of MessageBoxA and __debugbreak.
+#ifdef __APPLE__
+#include "MacFunctions.hpp"
+#endif
+
 PlaybackHandler::PlaybackHandler() {
     TFAR::getInstance().doDiagReport.connect([this](std::stringstream& diag) {
         diag << "PH:\n";
@@ -341,8 +346,8 @@ playbackWavStereo::~playbackWavStereo() {
 }
 
 size_t playbackWavStereo::getSamples(const short* &data) {
-    data = std::min(sampleStore.data() + currentPosition, sampleStore.end()._Ptr);
-    return sampleStore.end()._Ptr - (sampleStore.data() + currentPosition);
+    data = std::min(sampleStore.data() + currentPosition, &(*sampleStore.end()));
+    return &(*sampleStore.end()) - (sampleStore.data() + currentPosition);
 }
 
 size_t playbackWavStereo::cleanSamples(size_t sampleCount) {
@@ -371,16 +376,16 @@ size_t playbackWavRaw::getSamples(const short*& data) {
     });
 #endif
 #ifndef isCI 
-    if (sampleStore.data() + currentPosition >= sampleStore.end()._Ptr) {
+    if (sampleStore.data() + currentPosition >= &(*sampleStore.end())) {
         std::stringstream str;
         str << "playbackWavRaw::getSamples tried read beyond end!! " << sampleStore.size() << currentPosition;
-        str << "offs " << sampleStore.data() + currentPosition << sampleStore.end()._Ptr;
+        str << "offs " << sampleStore.data() + currentPosition << &(*sampleStore.end());
         Logger::log(LoggerTypes::teamspeakClientlog, str.str(), LogLevel_WARNING);
     }
 #endif
 
-    data = std::min(sampleStore.data() + currentPosition, sampleStore.end()._Ptr);
-    return sampleStore.end()._Ptr - (sampleStore.data() + currentPosition);
+    data = std::min(sampleStore.data() + currentPosition, &(*sampleStore.end()));
+    return &(*sampleStore.end()) - (sampleStore.data() + currentPosition);
 }
 
 size_t playbackWavRaw::cleanSamples(size_t sampleCount) {
@@ -462,8 +467,8 @@ size_t playbackWavProcessing::getSamples(const short*& data) {
         log_string("processing use " + std::to_string(duration), LogLevel_WARNING);
     });
 #endif
-    data = std::min(sampleStore.data() + currentPosition, sampleStore.end()._Ptr);
-    return sampleStore.end()._Ptr - (sampleStore.data() + currentPosition);
+    data = std::min(sampleStore.data() + currentPosition, &(*sampleStore.end()));
+    return &(*sampleStore.end()) - (sampleStore.data() + currentPosition);
 }
 
 size_t playbackWavProcessing::cleanSamples(size_t sampleCount) {
