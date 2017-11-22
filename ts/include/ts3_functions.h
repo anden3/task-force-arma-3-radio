@@ -9,6 +9,8 @@ extern "C" {
 #include "public_definitions.h"
 #include "plugin_definitions.h"
 
+#include <stddef.h>
+
 /* Functions exported to plugin from main binary */
 struct TS3Functions {
 	unsigned int (*getClientLibVersion)(char** result);
