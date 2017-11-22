@@ -5,6 +5,8 @@
 #include "string_ref.hpp"
 #include <chrono>
 
+#include <math.h>
+
 #define M_PI_FLOAT 3.14159265358979323846f
 namespace dataType {
     float fast_invsqrt(float number);
@@ -133,7 +135,7 @@ namespace dataType {
         float distanceUnderwater(const Position3D& other) const;
         Direction3D directionTo(const Position3D& other) const;
         Position3D crossProduct(const Position3D& other) const;
-        Position3D normalized() {};
+        Position3D normalized();
     };
 
     //Unit direction Vector
